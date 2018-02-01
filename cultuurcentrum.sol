@@ -1,8 +1,11 @@
 pragma solidity ^0.4.16;
 
 contract Evenement {
-   string mName;
-   uint mAvailable;
+   // The name of the event
+   bytes32 mName;
+
+   // The number of people who can attend the event
+   uint32 mAvailable;
    
 
    // The tickets that are sold for this event
@@ -14,8 +17,12 @@ contract Evenement {
    /**
      * Primary constructor of the event
      * This should be called from an EventWallet
+     * 
+     * @param name the name of the event
+     * @param available the number of people who can attend the event
+     * @param w the event wallet that created the event, this will be used as the owner of the event
      */
-   function Evenement(string name, uint available, EventWallet w) public {
+   function Evenement(bytes32 name, uint32 available, EventWallet w) public {
       mName = name;
       mAvailable = available;
       mWallet = w;
@@ -77,10 +84,19 @@ contract EventWallet{
      * @param available_places the number of people that can attend the event
      * @return the addres of the created event
      */
-   function addEvent(string name, uint available_places) only_owner() public returns(address)  {
+   function addEvent(bytes32 name, uint32 available_places) only_owner() public returns(address)  {
       Evenement e = new Evenement(name, available_places, this);
       mEvenement.push(e);
       return e;
+   }
+
+   /**
+     * Get the lists of events on this wallet
+     *
+     * @return the list of events
+     */
+   function getEvents() public view returns(Evenement[]){
+      return mEvenement;
    }
 
 }
