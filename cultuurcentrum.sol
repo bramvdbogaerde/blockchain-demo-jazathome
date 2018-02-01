@@ -47,7 +47,7 @@ contract Ticket {
 contract EventWallet{
    // A list of owners that own the wallet
    // An owner is allowed to change events, add them and delete them
-   address[] mOwners;
+   address mOwner;
 
    // The list of events that are managed by this wallet
    Evenement[] mEvenement;
@@ -60,13 +60,13 @@ contract EventWallet{
      */
    function EventWallet() public {
       // Add the creator of the wallet to the owner list
-      mOwners.push(msg.sender);
+      mOwner = msg.sender;
    }
 
    function isOwner(address p) public view returns(bool) {
       // An akward way in solidity to check if a certain key exists in the mapping
       // That is because there is not a function "contains" for mappings in Solidity
-      return mOwners[uint256(p)] > 0;
+      return mOwner == p;
    }
 
    /**
