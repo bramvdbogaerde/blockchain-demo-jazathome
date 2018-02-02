@@ -52,7 +52,7 @@ contract Evenement {
      *
      * @return the name of the event
      */
-   function getName() public view {
+   function getName() public view returns(bytes32) {
       return mName;
    }
 
@@ -61,7 +61,7 @@ contract Evenement {
      *
      * @return the number of tickets sold
      */
-   function getSoldTickets() public view {
+   function getSoldTickets() public view returns(uint32) {
       return soldTickets;
    }
 
@@ -83,6 +83,9 @@ contract Evenement {
       // TODO: check the amount payed to ensure the user pays enough for the ticket
       Ticket t = new Ticket(this);
 
+      // Increase the number of tickets sold counter
+      soldTickets += 1;
+
       // associate the sender with the ticket, to get fast lookup
       mTickets[t] = msg.sender;
       return t;
@@ -98,8 +101,8 @@ contract Ticket {
    // The owner of the ticket
    address mOwner;
    
-   modifier onlyOwner() {
-      require (this.sender == mOwner);
+   modifier onlyOwner(){
+      require(msg.sender == mOwner);
       _;
    }
 
@@ -128,7 +131,7 @@ contract Ticket {
       *
      * @return the owner of the ticket
      */
-    function getOwner() returns(address) {
+    function getOwner() public view returns(address) {
       return mOwner;
     }
 }
