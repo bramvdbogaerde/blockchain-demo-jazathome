@@ -46,6 +46,25 @@ contract Evenement {
       mName = name;
    }
 
+
+   /**
+     * Get the name of the event
+     *
+     * @return the name of the event
+     */
+   function getName() public view {
+      return mName;
+   }
+
+   /**
+     * Get the number of tickets sold
+     *
+     * @return the number of tickets sold
+     */
+   function getSoldTickets() public view {
+      return soldTickets;
+   }
+
    /**
      * Change the number of people who can attend the event
      *
@@ -68,6 +87,7 @@ contract Evenement {
       mTickets[t] = msg.sender;
       return t;
    }  
+
 
 }
 
