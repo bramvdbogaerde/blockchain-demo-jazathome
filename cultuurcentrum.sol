@@ -9,10 +9,19 @@ contract Evenement {
    
 
    // The tickets that are sold for this event
-   Ticket[] mTickets;
+   // associated with the owner of the ticket
+   mapping (address => address) mTickets;
+
+   // The number of tickets sold
+   uint32 soldTickets;
 
    // The wallet that organises the event
    EventWallet mWallet;
+
+   modifier onlyOwner() {
+      require(mWallet.isOwner(msg.sender));
+      _;
+   }
 
    /**
      * Primary constructor of the event
@@ -27,14 +36,81 @@ contract Evenement {
       mAvailable = available;
       mWallet = w;
    }
+
+   /**
+     * Change the name of the event. Only the owner of the EventWallet associated with the event can do that
+     *
+     * @param name the new name of the event
+     */
+   function setName(bytes32 name) public onlyOwner() {
+      mName = name;
+   }
+
+   /**
+     * Change the number of people who can attend the event
+     *
+     * @param available the number of people who can attend the event
+     */
+   function changeAvailable(uint32 available) public onlyOwner() {
+      mAvailable = available;
+   }
+
+   /**
+     * Sell a ticket to the caller of this method
+     * 
+     * @return the newly created ticket
+     */
+   function sellTicket() public payable returns(Ticket) {
+      // TODO: check the amount payed to ensure the user pays enough for the ticket
+      Ticket t = new Ticket(this);
+
+      // associate the sender with the ticket, to get fast lookup
+      mTickets[t] = msg.sender;
+      return t;
+   }  
+
 }
 
 contract Ticket {
    // The event for which the ticket was sold
-   Evenement evenement;
+   Evenement mEvenement;
 
    // The owner of the ticket
-   address owner;
+   address mOwner;
+   
+   modifier onlyOwner() {
+      require (this.sender == mOwner);
+      _;
+   }
+
+   /**
+     * Primary constructor of the ticket
+     *
+     * @param e the event for which this ticket was sold
+     */
+   function Ticket(Evenement e) public {
+      mOwner = msg.sender;
+      mEvenement = e;
+   }
+
+   /**
+     * Change the owner of the ticket.
+     * Caution: if you do this you might lose access to the ticket through other applications
+     * 
+     * @param newOwner the new owner of the ticket
+     */
+    function changeOwner(address newOwner) public onlyOwner() {
+      mOwner = newOwner;
+    }
+
+    /**
+      * Get the owner of the ticket
+      *
+     * @return the owner of the ticket
+     */
+    function getOwner() returns(address) {
+      return mOwner;
+    }
 }
 
 /**
