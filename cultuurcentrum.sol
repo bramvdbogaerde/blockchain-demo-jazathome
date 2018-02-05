@@ -12,6 +12,9 @@ contract Evenement {
    // associated with the owner of the ticket
    mapping (address => Ticket[]) mTickets;
 
+   // An array of tickets in orde to check their presence
+   mapping (address => uint32) presentTickets;
+
    // The number of tickets sold
    uint32 soldTickets;
 
@@ -74,6 +77,10 @@ contract Evenement {
       mAvailable = available;
    }
 
+   function hasTicket(address t) public view returns(bool) {
+      return presentTickets[t] > 0;
+   }
+
    /**
      * Sell a ticket to the caller of this method
      * 
@@ -83,11 +90,15 @@ contract Evenement {
       // TODO: check the amount payed to ensure the user pays enough for the ticket
       Ticket t = new Ticket(this);
 
+      // Add the ticket to the presence array so the presence of the ticket can easily be checked
+      presentTickets[address(t)] = 1;
+
       // Increase the number of tickets sold counter
       soldTickets += 1;
 
       // associate the sender with the ticket, to get fast lookup
       mTickets[msg.sender].push(t);
+      
       return t;
    }  
 
@@ -134,6 +145,15 @@ contract Ticket {
     function getOwner() public view returns(address) {
       return mOwner;
     }
+
+    /**
+      * Get the event for which this ticket was sold
+      * 
+      * @return the event for which this ticket was sold
+      */
+   function getEvent() public returns(Evenement) {
+      return mEvenement;
+   }
 }
 
 /**
