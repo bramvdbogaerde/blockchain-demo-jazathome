@@ -1,6 +1,6 @@
 pragma solidity ^0.4.16;
 
-import "cultuurcentrum.sol"
+import "cultuurcentrum.sol";
 
 /**
  * A contract representing a confirmed reservation
@@ -14,7 +14,7 @@ contract Reservation {
    ReservationWallet mWallet;
 
    // Array of locations the user reserved through this reservation
-   mapping (uint => Location) mLocations;
+   Location[] mLocations;
    
 
    /**
@@ -22,14 +22,10 @@ contract Reservation {
      * 
      * Passing the three locations indicates that a reservation is made for those tree locations
      */
-   function Reservation(Location l1, Location l2, Location l3, Ticket t) {
-      mLocations[0] = l1;
-      mLocations[1] = l2;
-      mLocations[2] = l3;
-
-      l1.reserveLocation(this);
-      l2.reserveLocation(this);
-      l3.reserveLocation(this);
+   function Reservation(Location l1, Location l2, Location l3, Ticket t) public {
+      mLocations.push(l1);
+      mLocations.push(l2);
+      mLocations.push(l3);
 
       mTicket = t;
    }
@@ -46,7 +42,7 @@ contract Reservation {
    /**
      * @return the locations that were reserved for this reservation
      */
-   function getLocations() public view returns(mapping (uint => Location)) {
+   function getLocations() public view returns(Location[]) {
      return mLocations;
    }
 
@@ -95,19 +91,23 @@ contract Location {
 contract ReservationWallet {
    address mOwner;
 
+   // The event for which reservations can be made
+   Evenement mEvent;
+
    modifier onlyOwner(){
       require(msg.sender == mOwner);
       _;
    }
-   
-   // The event for which the reservations are made
-   Evenement mEvent;
 
    // The list of locations that can be reserved by a particular ticket
    Location[] mLocations;
 
    // A mapping between a ticket address and a reservation
    mapping (address => Reservation) mReservations;
+
+   function ReservationWallet(Evenement e) public {
+      mEvent = e;
+   }
  
    /**
      * Check if the specified ticket has a reservation
@@ -116,7 +116,7 @@ contract ReservationWallet {
      * @return a boolean indicating that a reservations exists under the specified address
      */
    function hasReservation(address owner) public view returns(bool) {
-      return mReservations[owner] > 0;
+      return mReservations[owner] > address(0);
    }
 
    /**
@@ -129,8 +129,19 @@ contract ReservationWallet {
     */
    function reserve(Location l1, Location l2, Location l3, Ticket t) public returns(Reservation) {
       require(l1.canReserve(1) && l2.canReserve(1) && l3.canReserve(1));
+
+      // We check against the event if the ticket was sold for it instead of looking this
+      // information up from the ticket itself.
+      // Because a ticket can be indepently created from the event
+      require(mEvent.hasTicket(t));
+
       Reservation r = new Reservation(l1, l2, l3, t);
       mReservations[t] = r;
+
+      l1.reserveLocation(r);
+      l2.reserveLocation(r);
+      l3.reserveLocation(r);
+
       return r;
    }
 }

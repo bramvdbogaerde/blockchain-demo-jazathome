@@ -151,7 +151,11 @@ contract Ticket {
       * 
       * @return the event for which this ticket was sold
       */
-   function getEvent() public returns(Evenement) {
+   function getEvent() public view returns(Evenement) {
+      // Ensure that the ticket is indeed for the specified event
+      // if not, the user of the ticket should be notified that
+      // the ticket was forged. 
+      require(mEvenement.hasTicket(this));
       return mEvenement;
    }
 }
