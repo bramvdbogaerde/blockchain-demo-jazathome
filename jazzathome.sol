@@ -6,7 +6,8 @@ import "cultuurcentrum.sol"
  * A contract representing a confirmed reservation
  */
 contract Reservation {
-   address mOwner;
+   // The ticket for which the reservation was made
+   Ticket mTicket;
 
    // The wallet containing the reservation
    // This reference is kept to easily remove a reservation from the mapping there
@@ -15,27 +16,38 @@ contract Reservation {
    // Array of locations the user reserved through this reservation
    mapping (uint => Location) mLocations;
    
-   modifier onlyOwner() {
-      require(mOwner == msg.sender);
-   }
 
    /**
      * Primary constructor
      * 
      * Passing the three locations indicates that a reservation is made for those tree locations
      */
-   function Reservation(Location l1, Location l2, Location l3) {
+   function Reservation(Location l1, Location l2, Location l3, Ticket t) {
       mLocations[0] = l1;
       mLocations[1] = l2;
       mLocations[2] = l3;
+
+      l1.reserveLocation(this);
+      l2.reserveLocation(this);
+      l3.reserveLocation(this);
+
+      mTicket = t;
    }
 
+   /**
+     * Get the owner of the reservation
+     * 
+     * @return the owner of the reservation
+     */
+   function getTicket() public view returns(Ticket) {
+      return mTicket;
+   }
+
+   /**
+     * @return the locations that were reserved for this reservation
+     */
    function getLocations() public view returns(mapping (uint => Location)) {
      return mLocations;
-   }
-
-   function cancelReservation() public onlyOwner() {
-      
    }
 
 }
@@ -43,7 +55,11 @@ contract Reservation {
 contract Location {
    // the wallet that is associated with the location
    ReservationWallet mWallet;
-  
+
+   // the reservations made for this location
+   Reservation[] mReservations;
+
+   // The name of the location
    bytes32 name;
 
    // the total number of places on the location
@@ -52,12 +68,38 @@ contract Location {
    // the number of places reserved for this location
    uint32 reserved;   
    
+   /**
+     * Check if the location can be reserved
+     * 
+     * @param places the number of places that need to be reserved
+     * @return a boolean indicating that enough places are available for this location
+     */
+   function canReserve(uint32 places) public view returns(bool){
+      return reserved+places < capacity;
+   }
+
+
+   function reserveLocation(Reservation r) public {
+      require(reserved != capacity);
+      require(mWallet.hasReservation(r.getTicket()));
+
+      reserved += 1;
+      mReservations.push(r);
+   }
 }
+
 
 /**
  * A wallet containing all the reservations for an event
  */
 contract ReservationWallet {
+   address mOwner;
+
+   modifier onlyOwner(){
+      require(msg.sender == mOwner);
+      _;
+   }
+   
    // The event for which the reservations are made
    Evenement mEvent;
 
@@ -66,5 +108,29 @@ contract ReservationWallet {
 
    // A mapping between a ticket address and a reservation
    mapping (address => Reservation) mReservations;
-   
+ 
+   /**
+     * Check if the specified ticket has a reservation
+     *
+     * @param owner of the reservation
+     * @return a boolean indicating that a reservations exists under the specified address
+     */
+   function hasReservation(address owner) public view returns(bool) {
+      return mReservations[owner] > 0;
+   }
+
+   /**
+     * Reserve tree locations
+     *
+     * @param l1 the first location
+     * @param l2 the second location
+     * @param l3 the third location
+     * @return the new reservation
+    */
+   function reserve(Location l1, Location l2, Location l3, Ticket t) public returns(Reservation) {
+      require(l1.canReserve(1) && l2.canReserve(1) && l3.canReserve(1));
+      Reservation r = new Reservation(l1, l2, l3, t);
+      mReservations[t] = r;
+      return r;
+   }
 }
