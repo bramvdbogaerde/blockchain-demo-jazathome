@@ -10,7 +10,7 @@ contract Evenement {
 
    // The tickets that are sold for this event
    // associated with the owner of the ticket
-   mapping (address => address) mTickets;
+   mapping (address => Ticket[]) mTickets;
 
    // The number of tickets sold
    uint32 soldTickets;
@@ -87,7 +87,7 @@ contract Evenement {
       soldTickets += 1;
 
       // associate the sender with the ticket, to get fast lookup
-      mTickets[t] = msg.sender;
+      mTickets[msg.sender].push(t);
       return t;
    }  
 
@@ -150,9 +150,6 @@ contract EventWallet{
 
    // The list of events that are managed by this wallet
    Evenement[] mEvenement;
-
-   // The list of tickets that are sold by this wallet
-   Ticket[] mTickets;
 
    /**
      * Primary constructor, used to initialize the internal data structures
