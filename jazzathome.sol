@@ -146,7 +146,7 @@ contract ReservationWallet {
     */
    function reserve(Location l1, Location l2, Location l3, Ticket t) public returns(address) {
       // only the owner of a ticket can reserve the locations of a ticket
-      require(ticket.getOwner() == msg.sender);
+      require(t.getOwner() == msg.sender);
 
       require(l1.canReserve(1) && l2.canReserve(1) && l3.canReserve(1));
 
