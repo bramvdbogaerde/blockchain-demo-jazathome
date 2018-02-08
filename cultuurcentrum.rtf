@@ -1,0 +1,226 @@
+{\rtf1\ansi\uc0\deff0{\fonttbl{\f0\fmodern\fprq1\fcharset0;}}{\colortbl;\red187\green187\blue187;\red64\green128\blue128;\red188\green122\blue0;\red0\green128\blue0;\red176\green0\blue64;\red102\green102\blue102;\red170\green34\blue255;\red0\green0\blue255;\red210\green65\blue58;\red25\green23\blue124;\red136\green0\blue0;\red160\green160\blue0;\red153\green153\blue153;\red125\green144\blue41;\red186\green33\blue33;\red187\green102\blue136;\red187\green102\blue34;\red0\green0\blue128;\red128\green0\blue128;\red160\green0\blue0;\red0\green160\blue0;\red255\green0\blue0;\red136\green136\blue136;\red0\green68\blue221;}\f0 {\cf4\b pragma solidity} {\cf6 ^}{\cf6 0}.{\cf6 4}.{\cf6 16};\par
+\par
+{\cf4\b contract} Evenement \{\par
+   {\cf2\i // The name of the event\par
+}   {\cf5 bytes32} {\cf4\b public} mName;\par
+\par
+   {\cf2\i // The number of people who can attend the event\par
+}   {\cf5 uint32} {\cf4\b public} mAvailable;\par
+   \par
+\par
+   {\cf2\i // The tickets that are sold for this event\par
+}   {\cf2\i // associated with the owner of the ticket\par
+}   {\cf4\b mapping} ({\cf5 address} {\cf6 =>} Ticket[]) mTickets;\par
+\par
+   {\cf2\i // An array of tickets in orde to check their presence\par
+}   {\cf4\b mapping} ({\cf5 address} {\cf6 =>} {\cf5 uint32}) presentTickets;\par
+\par
+   {\cf2\i // The number of tickets sold\par
+}   {\cf5 uint32} {\cf4\b public} soldTickets;\par
+\par
+   {\cf2\i // The wallet that organises the event\par
+}   EventWallet mWallet;\par
+\par
+   {\cf4\b modifier} onlyOwner() \{\par
+      {\cf4 require}(mWallet.isOwner({\cf4 msg}.{\cf4 sender}));\par
+      {\cf4\b _};\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Primary constructor of the event\par
+     * This should be called from an EventWallet\par
+     * \par
+     * @param name the name of the event\par
+     * @param available the number of people who can attend the event\par
+     * @param w the event wallet that created the event, this will be used as the owner of the event\par
+     */}\par
+   {\cf4\b function} Evenement({\cf5 bytes32} name, {\cf5 uint32} available, EventWallet w) {\cf4\b public} \{\par
+      mName {\cf6 =} name;\par
+      mAvailable {\cf6 =} available;\par
+      mWallet {\cf6 =} w;\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Change the name of the event. Only the owner of the EventWallet associated with the event can do that\par
+     *\par
+     * @param name the new name of the event\par
+     */}\par
+   {\cf4\b function} setName({\cf5 bytes32} name) {\cf4\b public} onlyOwner() \{\par
+      mName {\cf6 =} name;\par
+   \}\par
+\par
+\par
+   {\cf2\i /**\par
+     * Get the name of the event\par
+     *\par
+     * @return the name of the event\par
+     */}\par
+   {\cf4\b function} getName() {\cf4\b public} {\cf4\b view} {\cf4\b returns}({\cf5 bytes32}) \{\par
+      {\cf4\b return} mName;\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Get the number of tickets sold\par
+     *\par
+     * @return the number of tickets sold\par
+     */}\par
+   {\cf4\b function} getSoldTickets() {\cf4\b public} {\cf4\b view} {\cf4\b returns}({\cf5 uint32}) \{\par
+      {\cf4\b return} soldTickets;\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Change the number of people who can attend the event\par
+     *\par
+     * @param available the number of people who can attend the event\par
+     */}\par
+   {\cf4\b function} changeAvailable({\cf5 uint32} available) {\cf4\b public} onlyOwner() \{\par
+      mAvailable {\cf6 =} available;\par
+   \}\par
+\par
+   {\cf4\b function} hasTicket({\cf5 address} t) {\cf4\b public} {\cf4\b view} {\cf4\b returns}({\cf5 bool}) \{\par
+      {\cf4\b return} presentTickets[t] {\cf6 >} {\cf6 0};\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Sell a ticket to the caller of this method\par
+     * \par
+     * @return the newly created ticket\par
+     */}\par
+   {\cf4\b function} sellTicket() {\cf4\b public} {\cf4\b payable} {\cf4\b returns}(Ticket) \{\par
+      {\cf2\i // TODO: check the amount payed to ensure the user pays enough for the ticket\par
+}      Ticket t {\cf6 =} {\cf4\b new} Ticket({\cf4 this});\par
+\par
+      {\cf2\i // Add the ticket to the presence array so the presence of the ticket can easily be checked\par
+}      presentTickets[{\cf5 address}(t)] {\cf6 =} {\cf6 1};\par
+\par
+      {\cf2\i // Increase the number of tickets sold counter\par
+}      soldTickets {\cf6 +=} {\cf6 1};\par
+\par
+      {\cf2\i // associate the sender with the ticket, to get fast lookup\par
+}      mTickets[{\cf4 msg}.{\cf4 sender}].push(t);\par
+      \par
+      {\cf4\b return} t;\par
+   \}  \par
+\par
+   {\cf4\b function} getTickets({\cf5 address} owner) {\cf4\b public} {\cf4\b view} {\cf4\b returns}(Ticket[])\{\par
+      {\cf4\b return} mTickets[owner];\par
+   \}\par
+\par
+\}\par
+\par
+{\cf4\b contract} Ticket \{\par
+   {\cf2\i // The event for which the ticket was sold\par
+}   Evenement mEvenement;\par
+\par
+   {\cf2\i // The owner of the ticket\par
+}   {\cf5 address} mOwner;\par
+   \par
+   {\cf4\b modifier} onlyOwner()\{\par
+      {\cf4 require}({\cf4 msg}.{\cf4 sender} {\cf6 ==} mOwner);\par
+      {\cf4\b _};\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Primary constructor of the ticket\par
+     *\par
+     * @param e the event for which this ticket was sold\par
+     */}\par
+   {\cf4\b function} Ticket(Evenement e) {\cf4\b public} \{\par
+      mOwner {\cf6 =} {\cf4 msg}.{\cf4 sender};\par
+      mEvenement {\cf6 =} e;\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Change the owner of the ticket.\par
+     * Caution: if you do this you might lose access to the ticket through other applications\par
+     * \par
+     * @param newOwner the new owner of the ticket\par
+     */}\par
+    {\cf4\b function} changeOwner({\cf5 address} newOwner) {\cf4\b public} onlyOwner() \{\par
+      mOwner {\cf6 =} newOwner;\par
+    \}\par
+\par
+    {\cf2\i /**\par
+      * Get the owner of the ticket\par
+      *\par
+     * @return the owner of the ticket\par
+     */}\par
+    {\cf4\b function} getOwner() {\cf4\b public} {\cf4\b view} {\cf4\b returns}({\cf5 address}) \{\par
+      {\cf4\b return} mOwner;\par
+    \}\par
+\par
+    {\cf2\i /**\par
+      * Get the event for which this ticket was sold\par
+      * \par
+      * @return the event for which this ticket was sold\par
+      */}\par
+   {\cf4\b function} getEvent() {\cf4\b public} {\cf4\b view} {\cf4\b returns}(Evenement) \{\par
+      {\cf2\i // Ensure that the ticket is indeed for the specified event\par
+}      {\cf2\i // if not, the user of the ticket should be notified that\par
+}      {\cf2\i // the ticket was forged. \par
+}      {\cf4 require}(mEvenement.hasTicket({\cf4 this}));\par
+      {\cf4\b return} mEvenement;\par
+   \}\par
+\}\par
+\par
+{\cf2\i /**\par
+ * A wallet that contains a list of Evenement\par
+ * and is able to sell tickets for them\par
+ *\par
+ * A third party should contact the EventWallet\par
+ * when it wants to know if a ticket-evenement combination is valid\par
+ */}\par
+{\cf4\b contract} EventWallet\{\par
+   {\cf2\i // A list of owners that own the wallet\par
+}   {\cf2\i // An owner is allowed to change events, add them and delete them\par
+}   {\cf5 address} mOwner;\par
+\par
+   {\cf2\i // The list of events that are managed by this wallet\par
+}   Evenement[] mEvenement;\par
+\par
+   {\cf2\i /**\par
+     * Primary constructor, used to initialize the internal data structures\par
+     */}\par
+   {\cf4\b function} EventWallet() {\cf4\b public} \{\par
+      {\cf2\i // Add the creator of the wallet to the owner list\par
+}      mOwner {\cf6 =} {\cf4 msg}.{\cf4 sender};\par
+   \}\par
+\par
+   {\cf4\b function} isOwner({\cf5 address} p) {\cf4\b public} {\cf4\b view} {\cf4\b returns}({\cf5 bool}) \{\par
+      {\cf2\i // An akward way in solidity to check if a certain key exists in the mapping\par
+}      {\cf2\i // That is because there is not a function "contains" for mappings in Solidity\par
+}      {\cf4\b return} mOwner {\cf6 ==} p;\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Only owner filter, scans the list of owners and checks that the sender is one of them\par
+     */}\par
+   {\cf4\b modifier} only_owner() \{\par
+      {\cf4 require}(isOwner({\cf4 msg}.{\cf4 sender}));\par
+      {\cf4\b _};\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Create and add an event to the wallet\par
+     * \par
+     * @param name the name of the new event\par
+     * @param available_places the number of people that can attend the event\par
+     * @return the addres of the created event\par
+     */}\par
+   {\cf4\b function} addEvent({\cf5 bytes32} name, {\cf5 uint32} available_places) only_owner() {\cf4\b public} {\cf4\b returns}({\cf5 address})  \{\par
+      Evenement e {\cf6 =} {\cf4\b new} Evenement(name, available_places, {\cf4 this});\par
+      mEvenement.push(e);\par
+      {\cf4\b return} e;\par
+   \}\par
+\par
+   {\cf2\i /**\par
+     * Get the lists of events on this wallet\par
+     *\par
+     * @return the list of events\par
+     */}\par
+   {\cf4\b function} getEvents() {\cf4\b public} {\cf4\b view} {\cf4\b returns}(Evenement[])\{\par
+      {\cf4\b return} mEvenement;\par
+   \}\par
+\par
+\}\par
+}

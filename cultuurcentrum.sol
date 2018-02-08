@@ -2,10 +2,10 @@ pragma solidity ^0.4.16;
 
 contract Evenement {
    // The name of the event
-   bytes32 mName;
+   bytes32 public mName;
 
    // The number of people who can attend the event
-   uint32 mAvailable;
+   uint32 public mAvailable;
    
 
    // The tickets that are sold for this event
@@ -16,7 +16,7 @@ contract Evenement {
    mapping (address => uint32) presentTickets;
 
    // The number of tickets sold
-   uint32 soldTickets;
+   uint32 public soldTickets;
 
    // The wallet that organises the event
    EventWallet mWallet;
@@ -102,6 +102,9 @@ contract Evenement {
       return t;
    }  
 
+   function getTickets(address owner) public view returns(Ticket[]){
+      return mTickets[owner];
+   }
 
 }
 

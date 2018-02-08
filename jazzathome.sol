@@ -82,6 +82,18 @@ contract Location {
       reserved += 1;
       mReservations.push(r);
    }
+
+   function getName() public view returns(bytes32){
+      return name;
+   }
+
+   function Location(bytes32 n, uint32 c, ReservationWallet wallet) public {
+      name = n;
+      capacity = c;
+      reserved = 0;
+      mWallet = wallet;
+   }
+
 }
 
 
@@ -107,6 +119,7 @@ contract ReservationWallet {
 
    function ReservationWallet(Evenement e) public {
       mEvent = e;
+      mOwner = msg.sender;
    }
  
    /**
@@ -119,6 +132,10 @@ contract ReservationWallet {
       return mReservations[owner] > address(0);
    }
 
+   function getReservation(address ticket) public view returns(Reservation){
+      return mReservations[ticket];
+   }
+
    /**
      * Reserve tree locations
      *
@@ -127,7 +144,10 @@ contract ReservationWallet {
      * @param l3 the third location
      * @return the new reservation
     */
-   function reserve(Location l1, Location l2, Location l3, Ticket t) public returns(Reservation) {
+   function reserve(Location l1, Location l2, Location l3, Ticket t) public returns(address) {
+      // only the owner of a ticket can reserve the locations of a ticket
+      require(ticket.getOwner() == msg.sender);
+
       require(l1.canReserve(1) && l2.canReserve(1) && l3.canReserve(1));
 
       // We check against the event if the ticket was sold for it instead of looking this
@@ -142,6 +162,17 @@ contract ReservationWallet {
       l2.reserveLocation(r);
       l3.reserveLocation(r);
 
-      return r;
+      return address(r);
+   }
+
+   function getLocations() public view returns(Location[]){
+      return mLocations;
+   }
+
+   function addLocation(bytes32 name, uint32 capacity) public onlyOwner() returns(address){
+      Location l = new Location(name, capacity, this);
+      mLocations.push(l);
+
+      return address(l);
    }
 }
