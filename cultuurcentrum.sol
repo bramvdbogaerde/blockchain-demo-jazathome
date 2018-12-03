@@ -1,5 +1,8 @@
 pragma solidity ^0.4.16;
 
+/**
+  * Event contract
+  */
 contract Evenement {
    // The name of the event
    bytes32 public mName;
